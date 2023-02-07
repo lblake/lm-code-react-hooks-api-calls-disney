@@ -5,17 +5,27 @@ import CharacterContainer from './components/character_container';
 import Navigation from './components/navigation';
 import { DisneyCharacter } from './disney_character';
 
+export const FavouritesContext = React.createContext<DisneyCharacter[]>([]);
+export const UpdateFavouritesContext = React.createContext(
+  (favourites: Array<DisneyCharacter>) => {}
+);
+
 const App: React.FC = () => {
   const baseURL = 'https://api.disneyapi.dev/';
 
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [showFavourites, setShowFavourites] = useState(false);
+
 
   useEffect(() => {
     getCharacters(currentPage);
   }, [currentPage]);
 
-  // Some dummy state representing disney characters
+  
   const [characters, setCharacters] = useState<Array<DisneyCharacter>>([]);
+  const [characterFavourites, setCharacterFavourites] = useState<
+    Array<DisneyCharacter>
+  >([]);
 
   const getCharacters = async (pageNumber: number) => {
     try {
@@ -32,13 +42,26 @@ const App: React.FC = () => {
       console.log('error');
     }
   };
-
+  const toggleFavouritesAll = () => {
+    setShowFavourites((prev) => (prev === true ? false : true));
+  };
   return (
-    <div className='page'>
-      <Header currentPage={currentPage} />
-      <Navigation currentPage={currentPage} setCurrentPage={setCurrentPage} />
-      <CharacterContainer characters={characters} />
-    </div>
+    <FavouritesContext.Provider value={characterFavourites}>
+      <UpdateFavouritesContext.Provider value={setCharacterFavourites}>
+        <div className="page">
+          <Header currentPage={currentPage} showFavourites={showFavourites} />
+          <Navigation
+            currentPage={currentPage}
+            showFavourites={showFavourites}
+            setCurrentPage={setCurrentPage}
+            toggleFavouritesAll={toggleFavouritesAll}
+          />
+          <CharacterContainer
+            characters={showFavourites ? characterFavourites : characters}
+          />
+        </div>
+      </UpdateFavouritesContext.Provider>
+    </FavouritesContext.Provider>
   );
 };
 
